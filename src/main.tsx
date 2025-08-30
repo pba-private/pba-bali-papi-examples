@@ -24,14 +24,36 @@ async function getSudoAccountFreeBalance(): Promise<bigint> {
 async function findAllProxyAccountsThatHaveTypeAny(): Promise<
   Array<SS58String>
 > {
-  const result = await typedApi.query.Proxy.Proxies.getEntries();
-  const accountIdOfFirstProxy = result[0].keyArgs[0];
-  const firstProxyValue = result[0].value;
+  const allProxies = await typedApi.query.Proxy.Proxies.getEntries();
+
+  return allProxies
+    .filter(({ value }) =>
+      value[0].some((delegation) => delegation.proxy_type.type === "Any")
+    )
+    .map(({ keyArgs }) => keyArgs[0]);
 }
 
 async function findMaxProxyAccounts(): Promise<Array<SS58String>> {
   // Find the proxy accounts that have the maximum allowed proxy delegates
+  const maxDelegates = await typedApi.constants.Proxy.MaxProxies();
+  const allProxies = await typedApi.query.Proxy.Proxies.getEntries();
+
+  return allProxies
+    .filter(({ value }) => value[0].length === maxDelegates)
+    .map(({ keyArgs }) => keyArgs[0]);
 }
+
+const [sudoFree, typeAnyProxies, maxProxyAccounts] = await Promise.all([
+  getSudoAccountFreeBalance(),
+  findAllProxyAccountsThatHaveTypeAny(),
+  findMaxProxyAccounts(),
+]);
+
+console.log({
+  sudoFree,
+  typeAnyProxies,
+  maxProxyAccounts,
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
