@@ -10,12 +10,18 @@ const client = createClient(getWsProvider("wss://paseo.rpc.amforc.com"));
 const typedApi = client.getTypedApi(pas);
 const dotTypedApi = client.getTypedApi(dot);
 
+const token = await typedApi.compatibilityToken;
+
+function calculateSomethingAboutBounties() {
+  const result = typedApi.constants.Bounties.BountyValueMinimum(token);
+}
+
 const res = await typedApi.query.System.Account.getValue(
   "5FxrUu1PUugUYs6HQ83bDswjGLyHYTEzm7yqmrkKVPaYe71Y"
 );
 console.log("my account", res);
 
-if (await typedApi.query.Sudo.Key.isCompatible(CompatibilityLevel.Identical)) {
+if (typedApi.query.Sudo.Key.isCompatible(CompatibilityLevel.Identical, token)) {
   const key = await typedApi.query.Sudo.Key.getValue();
   console.log("sudo key", key);
 } else {
