@@ -14,9 +14,20 @@ const res = await typedApi.query.System.Account.getValue(
 );
 console.log("my account", res);
 
-async function getSudoAccountFreeBalance(): Promise<bigint> {}
+async function getSudoAccountFreeBalance(): Promise<bigint> {
+  const sudoAccountId = await typedApi.query.Sudo.Key.getValue();
+  const account = await typedApi.query.System.Account.getValue(sudoAccountId!);
 
-async function findAllProxyAccountsOfTypeAny(): Promise<Array<SS58String>> {}
+  return account.data.free;
+}
+
+async function findAllProxyAccountsThatHaveTypeAny(): Promise<
+  Array<SS58String>
+> {
+  const result = await typedApi.query.Proxy.Proxies.getEntries();
+  const accountIdOfFirstProxy = result[0].keyArgs[0];
+  const firstProxyValue = result[0].value;
+}
 
 async function findMaxProxyAccounts(): Promise<Array<SS58String>> {
   // Find the proxy accounts that have the maximum allowed proxy delegates
