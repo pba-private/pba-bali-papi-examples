@@ -3,10 +3,12 @@ import { getSmProvider } from "polkadot-api/sm-provider";
 import { start } from "polkadot-api/smoldot";
 import type { JsonRpcProvider } from "polkadot-api/ws-provider/web";
 import { createClient } from "@polkadot-api/substrate-client";
+import { decAnyMetadata, u32 } from "@polkadot-api/substrate-bindings";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { toHex } from "polkadot-api/utils";
 
 const smoldot = start();
 const chain = smoldot.addChain({
@@ -39,11 +41,15 @@ const chainHead = client.chainHead(
   async (evt) => {
     console.log(evt);
 
-    if (evt.type === "finalized") {
-      const bodies = await Promise.all(
-        evt.finalizedBlockHashes.map((hash) => chainHead.body(hash))
+    if (evt.type === "initialized") {
+      const result = await chainHead.call(
+        evt.finalizedBlockHashes[0],
+        "Metadata_metadata_at_version",
+        toHex(u32.enc(15))
       );
-      console.log(bodies);
+
+      const metadata = decAnyMetadata(result);
+      console.log("metadata", metadata);
     }
   },
   (err) => {
