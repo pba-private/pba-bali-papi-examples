@@ -33,8 +33,12 @@ const provider: JsonRpcProvider = (onMsg) => {
   };
 };
 
+let id = 0;
+
 const connection = provider((msg) => {
   const parsedMsg = JSON.parse(msg);
+
+  // Figure out follow subscription
 
   if (
     parsedMsg.method === "chainHead_v1_followEvent" &&
@@ -44,7 +48,12 @@ const connection = provider((msg) => {
   }
 });
 
-let id = 0;
+function getBody(blockHash: string) {
+  // TODO
+  // You need follow subscription
+  // connection.send(...)
+}
+
 function sendFollow() {
   connection.send(
     JSON.stringify({
