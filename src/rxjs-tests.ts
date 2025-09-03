@@ -1,37 +1,29 @@
-import { Observable, Subject } from "rxjs";
+import { Observable, map, interval } from "rxjs";
 
-/** Producer */
-const subject = new Subject<number>();
+const take =
+  <T, R>(amount: number) =>
+  (source: Observable<T>) =>
+    new Observable<R>((subscriber) => {
+      // TODO
 
-let number = 0;
-const token = setInterval(() => {
-  number++;
-  subject.next(number);
+      const subscription = source.subscribe({
+        next: (v) => {
+          // TODO
+        },
+        error: (e) => subscriber.error(e),
+        complete: () => subscriber.complete(),
+      });
 
-  if (number === 10) {
-    clearInterval(token);
-    subject.complete();
-  }
-}, 200);
+      return () => {
+        // TODO
+      };
+    });
 
-const myObservable$ = new Observable<number>((subscriber) => {
-  subscriber.next(number);
+const multipliedBy2$ = interval(200).pipe(
+  map((v) => v * 2),
+  take(10)
+);
 
-  subject.subscribe((newNumber) => subscriber.next(newNumber));
-
-  return () => {
-    clearInterval(token);
-  };
+multipliedBy2$.subscribe((r) => {
+  console.log(r);
 });
-
-/** Consumer */
-
-myObservable$.subscribe((res) => {
-  console.log("sub1", res);
-});
-
-setTimeout(() => {
-  myObservable$.subscribe((res) => {
-    console.log("sub2", res);
-  });
-}, 500);
