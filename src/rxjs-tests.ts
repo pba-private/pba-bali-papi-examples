@@ -1,23 +1,30 @@
-import { Observable } from "rxjs";
+import { Observable, Subject } from "rxjs";
+
+/** Producer */
+const subject = new Subject<number>();
+
+let number = 0;
+const token = setInterval(() => {
+  number++;
+  subject.next(number);
+
+  if (number === 10) {
+    clearInterval(token);
+    subject.complete();
+  }
+}, 200);
 
 const myObservable$ = new Observable<number>((subscriber) => {
-  let number = 0;
-  const token = setInterval(() => {
-    number++;
-    subscriber.next(number);
-
-    if (number === 10) {
-      clearInterval(token);
-      subscriber.complete();
-    }
-  }, 200);
-
   subscriber.next(number);
+
+  subject.subscribe((newNumber) => subscriber.next(newNumber));
 
   return () => {
     clearInterval(token);
   };
 });
+
+/** Consumer */
 
 myObservable$.subscribe((res) => {
   console.log("sub1", res);
