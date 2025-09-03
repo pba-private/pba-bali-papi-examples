@@ -1,22 +1,24 @@
 import { Observable, map, interval } from "rxjs";
 
 const take =
-  <T, R>(amount: number) =>
+  <T>(amount: number) =>
   (source: Observable<T>) =>
-    new Observable<R>((subscriber) => {
-      // TODO
+    new Observable<T>((subscriber) => {
+      let count = 0;
 
       const subscription = source.subscribe({
         next: (v) => {
-          // TODO
+          subscriber.next(v);
+          count++;
+          if (count === amount) {
+            subscriber.complete();
+          }
         },
         error: (e) => subscriber.error(e),
         complete: () => subscriber.complete(),
       });
 
-      return () => {
-        // TODO
-      };
+      return () => subscription.unsubscribe();
     });
 
 const multipliedBy2$ = interval(200).pipe(
