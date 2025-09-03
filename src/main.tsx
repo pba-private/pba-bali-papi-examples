@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { pas } from "@polkadot-api/descriptors";
+import { Subscription } from "rxjs";
 
 const smoldot = start();
 const chain = smoldot.addChain({
@@ -15,11 +16,18 @@ const chain = smoldot.addChain({
 const client = createClient(getSmProvider(chain));
 const typedApi = client.getTypedApi(pas);
 
-typedApi.query.Sudo.Key.watchValue().subscribe((r) => {
-  console.log("sudo key", r);
-});
+let subscription: Subscription | null = null;
+typedApi.query.Sudo.Key.watchValue().subscribe((key) => {
+  if (subscription) {
+    subscription.unsubscribe();
+  }
 
-typedApi.query.System.Account.watchValue("Sudo key").subscribe((r) => {});
+  subscription = typedApi.query.System.Account.watchValue(key!).subscribe(
+    (value) => {
+      console.log(value);
+    }
+  );
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
