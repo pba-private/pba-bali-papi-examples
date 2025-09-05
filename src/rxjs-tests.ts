@@ -12,6 +12,8 @@ const ACCOUNT = "1jbZxCFeNMRgVRfggkknf8sTWzrVKbzLvRuLWvSyg9bByRG";
 const TRACK = 33;
 
 
+const getVoteDirection = (vote: number) => vote & 0x80 ? "aye" as const : "nay" as const;
+
 // query.ConvictionVoting.VotingFor.watchValue(account, track)
 // query.Referenda.ReferendumInfoFor.getValues([number][])
 
