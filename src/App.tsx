@@ -1,18 +1,62 @@
-import { local, nextLocal, MultiAddress } from "@polkadot-api/descriptors";
-import { Binary, CompatibilityLevel, createClient } from "polkadot-api";
+import { MultiAddress, dot, nextLocal } from "@polkadot-api/descriptors";
+import { getMultisigSigner } from "@polkadot-api/meta-signers";
+import {
+  Binary,
+  CompatibilityLevel,
+  createClient,
+  getTypedCodecs,
+  type PolkadotSigner,
+  type SS58String,
+} from "polkadot-api";
 import { connectInjectedExtension } from "polkadot-api/pjs-signer";
 import { getWsProvider } from "polkadot-api/ws-provider/web";
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const client = createClient(getWsProvider("ws://localhost:9944/"));
-const typedApi = client.getTypedApi(local);
+const client = createClient(
+  getWsProvider("wss://polkadot-rpc.publicnode.coms")
+);
+const typedApi = client.getTypedApi(dot);
 const nextApi = client.getTypedApi(nextLocal);
 
 const extension = await connectInjectedExtension("polkadot-js");
 const signerAccount = extension
   .getAccounts()
   .find((v) => v.name === "PBA Oliva")!;
+
+// const multisigSigner = getMultisigSigner(
+//   {
+//     signatories: ["Josep", "Carlo", "Victor"],
+//     threshold: 2,
+//   },
+//   typedApi.query.Multisig.Multisigs.getValue,
+//   typedApi.apis.TransactionPaymentApi.query_info,
+//   signerAccount.polkadotSigner
+// );
+
+const typedCodecs = await getTypedCodecs(dot);
+
+// typedCodecs.tx.Proxy.proxy.enc();
+// await typedApi.txFromCallData()
+
+const createProxySigner = (
+  proxied: SS58String,
+  signer: PolkadotSigner
+): PolkadotSigner => ({
+  publicKey: signer.publicKey,
+  signBytes() {
+    throw new Error("Can't sign bytes");
+  },
+  async signTx(callData, signedExtensions, metadata, atBlockNumber, hasher) {
+    return signer.signTx(
+      null /* TODO */,
+      signedExtensions,
+      metadata,
+      atBlockNumber,
+      hasher
+    );
+  },
+});
 
 function App() {
   const [account, setAccount] = useState("");
@@ -44,7 +88,7 @@ function App() {
           value: BigInt(amount),
         });
 
-    tx.signSubmitAndWatch(signerAccount.polkadotSigner).subscribe((r) => {
+    tx.signSubmitAndWatch(multisigSigner).subscribe((r) => {
       console.log(r);
     });
   };
