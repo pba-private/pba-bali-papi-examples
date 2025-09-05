@@ -48,8 +48,15 @@ const createProxySigner = (
     throw new Error("Can't sign bytes");
   },
   async signTx(callData, signedExtensions, metadata, atBlockNumber, hasher) {
+    // const tx = await typedApi.txFromCallData(Binary.fromBytes(callData));
+    const decodedCall = typedCodecs.tx.Proxy.proxy.inner.call.dec(callData);
+
     return signer.signTx(
-      null /* TODO */,
+      typedCodecs.tx.Proxy.proxy.enc({
+        real: MultiAddress.Id(proxied),
+        call: decodedCall,
+        force_proxy_type: undefined,
+      }),
       signedExtensions,
       metadata,
       atBlockNumber,
