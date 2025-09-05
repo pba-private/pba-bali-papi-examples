@@ -1,35 +1,88 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { local, nextLocal, MultiAddress } from "@polkadot-api/descriptors";
+import { Binary, CompatibilityLevel, createClient } from "polkadot-api";
+import { connectInjectedExtension } from "polkadot-api/pjs-signer";
+import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { useEffect, useState } from "react";
+import "./App.css";
+
+const client = createClient(getWsProvider("ws://localhost:9944/"));
+const typedApi = client.getTypedApi(local);
+const nextApi = client.getTypedApi(nextLocal);
+
+const extension = await connectInjectedExtension("polkadot-js");
+const signerAccount = extension
+  .getAccounts()
+  .find((v) => v.name === "PBA Oliva")!;
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [account, setAccount] = useState("");
+  const [remark, setRemark] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [requiresRemark, setRequiresRemark] = useState(false);
+
+  useEffect(() => {
+    client.finalizedBlock$.subscribe(async () => {
+      if (
+        !(await typedApi.tx.Balances.transfer_keep_alive.isCompatible(
+          CompatibilityLevel.BackwardsCompatible
+        ))
+      ) {
+        setRequiresRemark(true);
+      }
+    });
+  }, []);
+
+  const submit = () => {
+    const tx = requiresRemark
+      ? nextApi.tx.Balances.transfer_keep_alive({
+          dest: MultiAddress.Id(account),
+          value: BigInt(amount),
+          remark: Binary.fromText(remark),
+        })
+      : typedApi.tx.Balances.transfer_keep_alive({
+          dest: MultiAddress.Id(account),
+          value: BigInt(amount),
+        });
+
+    tx.signSubmitAndWatch(signerAccount.polkadotSigner).subscribe((r) => {
+      console.log(r);
+    });
+  };
 
   return (
     <>
+      <h3>Transfer!</h3>
       <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        Account
+        <input
+          type="text"
+          value={account}
+          onChange={(evt) => setAccount(evt.target.value)}
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div>
+        Amount
+        <input
+          type="number"
+          value={amount}
+          onChange={(evt) => setAmount(evt.target.valueAsNumber)}
+        />
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {requiresRemark ? (
+        <div>
+          Remark
+          <input
+            type="text"
+            value={remark}
+            onChange={(evt) => setRemark(evt.target.value)}
+          />
+        </div>
+      ) : null}
+      <button type="button" onClick={submit}>
+        Submit
+      </button>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -16,7 +16,8 @@
     "@polkadot-api/substrate-client": "^0.4.4",
     "polkadot-api": "^1.16.2",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

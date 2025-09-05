@@ -23,6 +23,9 @@ dependencies:
   react-dom:
     specifier: ^19.1.1
     version: 19.1.1(react@19.1.1)
+  rxjs:
+    specifier: ^7.8.2
+    version: 7.8.2
 
 devDependencies:
   '@eslint/js':
