@@ -1,31 +1,18 @@
+import { createClient } from "polkadot-api";
 import { Observable, map, interval } from "rxjs";
+import { getWsProvider } from "polkadot-api/ws-provider/web";
+import { dot } from "@polkadot-api/descriptors";
 
-const take =
-  <T>(amount: number) =>
-  (source: Observable<T>) =>
-    new Observable<T>((subscriber) => {
-      let count = 0;
-
-      const subscription = source.subscribe({
-        next: (v) => {
-          subscriber.next(v);
-          count++;
-          if (count === amount) {
-            subscriber.complete();
-          }
-        },
-        error: (e) => subscriber.error(e),
-        complete: () => subscriber.complete(),
-      });
-
-      return () => subscription.unsubscribe();
-    });
-
-const multipliedBy2$ = interval(200).pipe(
-  map((v) => v * 2),
-  take(10)
+const client = createClient(
+  getWsProvider("wss://polkadot-rpc.publicnode.com")
 );
+const typedApi = client.getTypedApi(dot);
 
-multipliedBy2$.subscribe((r) => {
-  console.log(r);
-});
+const ACCOUNT = "1jbZxCFeNMRgVRfggkknf8sTWzrVKbzLvRuLWvSyg9bByRG";
+const TRACK = 33;
+
+
+// query.ConvictionVoting.VotingFor.watchValue(account, track)
+// query.Referenda.ReferendumInfoFor.getValues([number][])
+
+const referendaWithSameOutcome$ = /* ... */
